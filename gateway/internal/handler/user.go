@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"reflect"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	pb "github.com/umarbek-backend-engineer/Music_Player/gateway/github.com/umarbek-backend-engineer/Music_Player/gateway/proto/gen"
 	"github.com/umarbek-backend-engineer/Music_Player/gateway/internal/grpc_init"
+	"github.com/umarbek-backend-engineer/Music_Player/gateway/internal/modules"
 	"github.com/umarbek-backend-engineer/Music_Player/gateway/pkg/utils"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -29,14 +31,16 @@ func Register(c *gin.Context) {
 	}
 
 	// pass your request to the gRPC service
-	resp, err := grpc_init.AuthClient.Register(ctx, &request)
+	_, err = grpc_init.AuthClient.Register(ctx, &request)
 	if err != nil {
 		utils.Error(c, "Internal Error in auth-service", http.StatusBadGateway, err)
 		return
 	}
 
 	// give the reponse
-	c.ShouldBind(resp)
+	c.ShouldBind(gin.H{
+		"message": "success",
+	})
 }
 
 func LogIn(c *gin.Context) {
@@ -77,7 +81,7 @@ func LogIn(c *gin.Context) {
 
 	// pass the response to the user
 	c.ShouldBind(gin.H{
-		"message": "Log in successfully",
+		"message": "success",
 	})
 }
 
@@ -106,7 +110,7 @@ func LogOut(c *gin.Context) {
 
 	// return the response to the user
 	c.ShouldBind(gin.H{
-		"log out": resp.Success,
+		"log out": resp.Success, // this will return ether true or false
 	})
 }
 
@@ -141,7 +145,7 @@ func DeleteAccount(c *gin.Context) {
 
 	// pass the response to the user
 	c.ShouldBind(gin.H{
-		"message": "Success",
+		"message": "success",
 	})
 }
 
@@ -183,7 +187,7 @@ func ResetPassword(c *gin.Context) {
 
 	// pass the response to the user
 	c.ShouldBind(gin.H{
-		"message": "Success",
+		"message": "success",
 	})
 }
 
@@ -214,7 +218,7 @@ func Refresh(c *gin.Context) {
 
 	// pass the response to the user
 	c.ShouldBind(gin.H{
-		"message": "Success",
+		"message": "success",
 	})
 }
 
@@ -250,6 +254,15 @@ func GetUsers(c *gin.Context) {
 	if err != nil {
 		utils.Error(c, "Internal Error in auth-service", http.StatusBadGateway, err)
 		return
+	}
+
+	// decode from pb to DTO struct
+	for i := 0; i < len(users.Users); i++ {
+		// initialize DTO strcut
+		var DTOusers modules.RegisterResponse
+
+		valueOFPBUser := reflect.ValueOf(users.Users[i]).Elem()
+
 	}
 
 	// return the response
